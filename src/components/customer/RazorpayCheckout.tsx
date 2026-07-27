@@ -4,10 +4,14 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { loadRazorpayScript } from "@/lib/load-razorpay";
 
 declare global {
   interface Window {
-    Razorpay: new (options: Record<string, unknown>) => { open: () => void; on: (event: string, handler: (response: Record<string, unknown>) => void) => void };
+    Razorpay: new (options: Record<string, unknown>) => {
+      open: () => void;
+      on: (event: string, handler: (response: Record<string, unknown>) => void) => void;
+    };
   }
 }
 
@@ -15,40 +19,6 @@ interface RazorpayCheckoutProps {
   plan: string;
   amount: number;
   onSuccess?: () => void;
-}
-
-function loadRazorpayScript(): Promise<boolean> {
-  return new Promise((resolve) => {
-    if (window.Razorpay) {
-      resolve(true);
-      return;
-    }
-    const existing = document.getElementById("razorpay-checkout-js");
-    if (existing) {
-      let attempts = 0;
-      const check = setInterval(() => {
-        if (window.Razorpay || ++attempts > 20) {
-          clearInterval(check);
-          resolve(!!window.Razorpay);
-        }
-      }, 100);
-      return;
-    }
-    const script = document.createElement("script");
-    script.id = "razorpay-checkout-js";
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => {
-      let attempts = 0;
-      const check = setInterval(() => {
-        if (window.Razorpay || ++attempts > 20) {
-          clearInterval(check);
-          resolve(!!window.Razorpay);
-        }
-      }, 100);
-    };
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
 }
 
 export function RazorpayCheckout({ plan, amount, onSuccess }: RazorpayCheckoutProps) {
@@ -115,6 +85,10 @@ export function RazorpayCheckout({ plan, amount, onSuccess }: RazorpayCheckoutPr
       rzp.on("payment.failed", (response: Record<string, unknown>) => {
         const error = response.error as { description?: string } | undefined;
         toast.error(error?.description || "Payment failed");
+        setLoading(false);
+      });
+
+      rzp.on("payment.modal.close", () => {
         setLoading(false);
       });
 

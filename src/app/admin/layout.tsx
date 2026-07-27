@@ -8,7 +8,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [overlayOpen, setOverlayOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-screen overflow-hidden bg-background" suppressHydrationWarning>
       <Sidebar
         portal="admin"
         mode="overlay"

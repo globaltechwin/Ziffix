@@ -19,12 +19,6 @@ function getRoleFromSession(session: string): string | null {
   }
 }
 
-const portalRoles: Record<string, string> = {
-  admin: "admin",
-  customer: "customer",
-  technician: "technician",
-};
-
 export function proxy(request: NextRequest) {
   const session = request.cookies.get("session")?.value;
   const pathname = request.nextUrl.pathname;
@@ -46,12 +40,11 @@ export function proxy(request: NextRequest) {
     const portalMatch = pathname.match(/^\/(admin|customer|technician)/);
     if (portalMatch) {
       const portal = portalMatch[1];
-      const requiredRole = portalRoles[portal];
-      if (requiredRole && role !== requiredRole) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/sign-in";
-        url.searchParams.set("from", pathname);
-        return NextResponse.redirect(url);
+      if (portal === "admin" && role !== "admin") {
+        return NextResponse.redirect(new URL("/sign-in", request.url));
+      }
+      if (portal === "technician" && role !== "technician" && role !== "admin") {
+        return NextResponse.redirect(new URL("/sign-in", request.url));
       }
     }
 

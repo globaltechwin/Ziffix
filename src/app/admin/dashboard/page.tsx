@@ -53,7 +53,7 @@ function Skeleton() {
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="flex flex-1 flex-col items-center justify-end">
                 <div className="h-3 w-8 rounded bg-muted" />
-                <div className="mt-1 w-full rounded-t-md bg-muted" style={{ height: `${40 + Math.random() * 60}px` }} />
+                <div className="mt-1 w-full rounded-t-md bg-muted" style={{ height: `${40 + (i * 17 % 60)}px` }} />
                 <div className="mt-1 h-3 w-8 rounded bg-muted" />
               </div>
             ))}
@@ -88,13 +88,13 @@ export default function AdminDashboardPage() {
 
   if (!data) return <Skeleton />;
 
-  const maxRevenue = Math.max(...data.monthlyRevenue.map((m) => m.value), 1);
+  const maxRevenue = Math.max(...(data.monthlyRevenue ?? []).map((m) => m.value), 1);
 
   const statCards = [
-    { label: "Total Customers", value: data.totalCustomers, icon: Users, color: "text-blue-600 bg-blue-50", change: `+${data.newCustomersThisMonth} this month` },
-    { label: "Active Bookings", value: data.activeBookings, icon: CalendarCheck, color: "text-green-600 bg-green-50", change: `${data.completedThisMonth} completed` },
-    { label: "Total Revenue", value: `₹${data.totalRevenue.toLocaleString("en-IN")}`, icon: IndianRupee, color: "text-purple-600 bg-purple-50", change: `${data.pendingPayments} pending` },
-    { label: "Active Technicians", value: data.totalTechnicians, icon: Wrench, color: "text-amber-600 bg-amber-50", change: `Avg rating ${data.avgRating}` },
+    { label: "Total Customers", value: data.totalCustomers ?? 0, icon: Users, color: "text-blue-600 bg-blue-50", change: `+${data.newCustomersThisMonth ?? 0} this month` },
+    { label: "Active Bookings", value: data.activeBookings ?? 0, icon: CalendarCheck, color: "text-green-600 bg-green-50", change: `${data.completedThisMonth ?? 0} completed` },
+    { label: "Total Revenue", value: `₹${(data.totalRevenue ?? 0).toLocaleString("en-IN")}`, icon: IndianRupee, color: "text-purple-600 bg-purple-50", change: `${data.pendingPayments ?? 0} pending` },
+    { label: "Active Technicians", value: data.totalTechnicians ?? 0, icon: Wrench, color: "text-amber-600 bg-amber-50", change: `Avg rating ${data.avgRating ?? 0}` },
   ];
 
   return (
@@ -129,7 +129,7 @@ export default function AdminDashboardPage() {
         >
           <h3 className="mb-4 font-semibold text-foreground">Monthly Revenue</h3>
           <div className="flex items-end gap-2" style={{ height: 140 }}>
-            {data.monthlyRevenue.map((m) => (
+            {(data.monthlyRevenue ?? []).map((m) => (
               <div key={m.month} className="flex flex-1 flex-col items-center justify-end">
                 <span className="mb-1 text-[10px] text-muted-foreground">₹{(m.value / 1000).toFixed(0)}k</span>
                 <div
@@ -153,7 +153,7 @@ export default function AdminDashboardPage() {
             <Clock className="size-4 text-muted-foreground" />
           </div>
           <div className="space-y-3">
-            {data.recentActivity.slice(0, 8).map((activity) => {
+            {(data.recentActivity ?? []).slice(0, 8).map((activity) => {
               const Icon = activityIcons[activity.type] || CalendarCheck;
               const color = activityColors[activity.type] || "bg-gray-50 text-gray-600";
               return (

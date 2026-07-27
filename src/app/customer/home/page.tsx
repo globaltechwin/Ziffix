@@ -3,7 +3,7 @@
 import { FeaturedServices } from "@/components/customer/home/FeaturedServices";
 import { ServiceCategories } from "@/components/customer/home/ServiceCategories";
 import { QuickServices } from "@/components/customer/home/QuickServices";
-import { Offers } from "@/components/customer/home/Offers";
+import { Subscriptions } from "@/components/customer/home/Subscriptions";
 import { Testimonials } from "@/components/customer/home/Testimonials";
 import { Footer } from "@/components/customer/home/Footer";
 
@@ -21,10 +21,10 @@ export default function CustomerHomePage() {
         <QuickServices />
       </div>
 
-      {/* Full-width Offers */}
+      {/* Full-width Subscriptions */}
       <div className="mt-8">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <Offers />
+          <Subscriptions />
         </div>
       </div>
 

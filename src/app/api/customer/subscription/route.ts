@@ -40,3 +40,58 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ plan: "free" });
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const sessionCookie = request.cookies.get("session")?.value;
+    if (!sessionCookie) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = getUserIdFromSession(sessionCookie);
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { plan } = await request.json();
+
+    if (!plan || !["free", "starter", "pro"].includes(plan)) {
+      return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
+    }
+
+    const existing = await prisma.subscription.findUnique({
+      where: { userId },
+      select: { plan: true, endDate: true },
+    });
+
+    if (plan === "free") {
+      if (!existing) {
+        return NextResponse.json({ plan: "free" });
+      }
+      return NextResponse.json({
+        plan: "free",
+        scheduled: true,
+        endDate: existing.endDate,
+        message: existing.endDate
+          ? `Your ${existing.plan} plan remains active until ${new Date(existing.endDate).toLocaleDateString("en-IN")}. After that, you'll be on the Free plan.`
+          : "Downgraded to Free plan.",
+      });
+    }
+
+    if (existing) {
+      const updated = await prisma.subscription.update({
+        where: { userId },
+        data: { plan, status: "active", amount: plan === "starter" ? 499 : 999 },
+      });
+      return NextResponse.json({ plan: updated.plan });
+    }
+
+    const created = await prisma.subscription.create({
+      data: { userId, plan, status: "active", amount: plan === "starter" ? 499 : 999 },
+    });
+    return NextResponse.json({ plan: created.plan });
+  } catch (error) {
+    console.error("Update subscription error:", error);
+    return NextResponse.json({ error: "Failed to update subscription" }, { status: 500 });
+  }
+}

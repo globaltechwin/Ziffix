@@ -4,6 +4,61 @@ export type NavItem = {
   icon: string;
 };
 
+export const subscriptionPlans = [
+  {
+    id: "free",
+    name: "Free",
+    price: 0,
+    description: "Basic access for occasional use",
+    icon: "Star",
+    color: "text-gray-600",
+    bg: "bg-gray-50",
+    border: "border-gray-200",
+    features: [
+      "3 bookings per month",
+      "Basic services only",
+      "Standard support",
+      "Standard response time",
+    ],
+  },
+  {
+    id: "starter",
+    name: "Starter",
+    price: 499,
+    description: "For regular home service needs",
+    icon: "Zap",
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    border: "border-blue-200",
+    features: [
+      "Unlimited bookings",
+      "All services included",
+      "Priority booking slots",
+      "Monthly maintenance visit",
+      "Email support",
+    ],
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    price: 999,
+    description: "Complete home care solution",
+    icon: "Crown",
+    color: "text-purple-600",
+    bg: "bg-purple-50",
+    border: "border-purple-200",
+    features: [
+      "Unlimited bookings",
+      "All services included",
+      "Instant booking priority",
+      "Free monthly visit",
+      "24/7 priority support",
+      "Extended warranty on services",
+      "Dedicated technician",
+    ],
+  },
+];
+
 export const adminNavItems: NavItem[] = [
   { title: "Dashboard", href: "/admin/dashboard", icon: "LayoutDashboard" },
   { title: "Customers", href: "/admin/customers", icon: "Users" },

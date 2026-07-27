@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { Check, Crown, Zap, Star, Loader2 } from "lucide-react";
+import { Check, Crown, Zap, Star, ArrowRight, Loader2 } from "lucide-react";
+import Link from "next/link";
 import { RazorpayCheckout } from "@/components/customer/RazorpayCheckout";
 import { subscriptionPlans } from "@/lib/constants";
 import { toast } from "sonner";
@@ -10,7 +11,7 @@ import { toast } from "sonner";
 const iconMap: Record<string, typeof Star> = { Star, Zap, Crown };
 const planOrder: Record<string, number> = { free: 0, starter: 1, pro: 2 };
 
-export default function CustomerSubscriptionsPage() {
+export function Subscriptions() {
   const [currentPlan, setCurrentPlan] = useState<string>("free");
   const [downgrading, setDowngrading] = useState<string | null>(null);
 
@@ -35,13 +36,8 @@ export default function CustomerSubscriptionsPage() {
         toast.error("Failed to change plan");
         return;
       }
-      const data = await res.json();
-      if (data.scheduled) {
-        toast.success(data.message);
-      } else {
-        setCurrentPlan(targetPlan);
-        toast.success(`Switched to ${targetPlan.charAt(0).toUpperCase() + targetPlan.slice(1)} plan`);
-      }
+      setCurrentPlan(targetPlan);
+      toast.success(`Switched to ${targetPlan.charAt(0).toUpperCase() + targetPlan.slice(1)} plan`);
     } catch {
       toast.error("Failed to change plan");
     } finally {
@@ -54,17 +50,19 @@ export default function CustomerSubscriptionsPage() {
   };
 
   return (
-    <div className="space-y-10">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Choose Your Plan
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Select the plan that best fits your home service needs
-        </p>
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-foreground">
+          Subscription Plans
+        </h2>
+        <Link
+          href="/customer/subscriptions"
+          className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+        >
+          View All <ArrowRight className="size-3.5" />
+        </Link>
       </div>
-
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {subscriptionPlans.map((plan, i) => {
           const Icon = iconMap[plan.icon];
           const isCurrent = currentPlan === plan.id;
@@ -75,10 +73,11 @@ export default function CustomerSubscriptionsPage() {
           return (
             <motion.div
               key={plan.id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className={`relative flex flex-col rounded-2xl border-2 bg-card p-6 ${
+              transition={{ delay: i * 0.08 }}
+              whileHover={{ y: -2 }}
+              className={`relative flex flex-col rounded-2xl border-2 bg-card p-5 ${
                 isCurrent ? "border-primary shadow-md" : plan.border
               }`}
             >
@@ -88,46 +87,44 @@ export default function CustomerSubscriptionsPage() {
                 </div>
               )}
 
-              <div className={`mb-4 flex size-12 items-center justify-center rounded-xl ${plan.bg}`}>
-                <Icon className={`size-6 ${plan.color}`} />
+              <div className={`mb-3 flex size-10 items-center justify-center rounded-xl ${plan.bg}`}>
+                <Icon className={`size-5 ${plan.color}`} />
               </div>
 
-              <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {plan.description}
-              </p>
-
-              <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-foreground">
+              <h3 className="text-base font-bold text-foreground">{plan.name}</h3>
+              <p className="mt-1 text-xs text-muted-foreground">{plan.description}</p>
+,
+              <div className="mt-3 flex items-baseline gap-1">
+                <span className="text-2xl font-bold text-foreground">
                   {plan.price === 0 ? "Free" : `₹${plan.price}`}
                 </span>
                 {plan.price > 0 && (
-                  <span className="text-sm text-muted-foreground">/mo</span>
+                  <span className="text-xs text-muted-foreground">/mo</span>
                 )}
               </div>
 
-              <ul className="mt-6 flex-1 space-y-3">
+              <ul className="mt-4 flex-1 space-y-2">
                 {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2 text-sm">
-                    <Check className="mt-0.5 size-4 shrink-0 text-green-600" />
+                  <li key={feature} className="flex items-start gap-2 text-xs">
+                    <Check className="mt-0.5 size-3.5 shrink-0 text-green-600" />
                     <span className="text-foreground">{feature}</span>
                   </li>
                 ))}
               </ul>
 
-              <div className="mt-6">
+              <div className="mt-4">
                 {isCurrent ? (
-                  <div className="w-full rounded-lg border border-border bg-muted py-2.5 text-center text-sm font-medium text-muted-foreground">
+                  <div className="w-full rounded-lg border border-border bg-muted py-2 text-center text-xs font-medium text-muted-foreground">
                     Current Plan
                   </div>
                 ) : isLower ? (
                   <button
                     onClick={() => handleDowngrade(plan.id)}
                     disabled={downgrading === plan.id}
-                    className="w-full rounded-lg border border-border bg-background py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                    className="w-full rounded-lg border border-border bg-background py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
                   >
                     {downgrading === plan.id ? (
-                      <Loader2 className="mx-auto size-4 animate-spin" />
+                      <Loader2 className="mx-auto size-3.5 animate-spin" />
                     ) : (
                       "Downgrade"
                     )}
