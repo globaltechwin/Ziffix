@@ -12,6 +12,7 @@ import {
   Zap,
   Wrench,
   Grid3X3,
+  LayoutGrid,
   Loader2,
   type LucideIcon,
 } from "lucide-react";
@@ -64,7 +65,15 @@ export function ServiceCategories() {
           };
         });
 
-        setCategories(cats.slice(0, 8));
+        cats.push({
+          name: "All Services",
+          icon: LayoutGrid,
+          color: "#6366f1",
+          count: services.length,
+          href: "/customer/services",
+        });
+
+        setCategories(cats.slice(0, 9));
       })
       .catch(() => setCategories([]))
       .finally(() => setLoading(false));
