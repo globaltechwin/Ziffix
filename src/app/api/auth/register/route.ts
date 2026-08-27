@@ -20,7 +20,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const existing = await prisma.user.findUnique({ where: { phone } });
+    if (!process.env.DATABASE_URL) {
+      console.error("REGISTER ERROR: DATABASE_URL is not set");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
+    let existing;
+    try {
+      existing = await prisma.user.findUnique({ where: { phone } });
+    } catch (dbError) {
+      console.error("REGISTER DB ERROR (findUnique):", dbError);
+      return NextResponse.json(
+        { error: "Database connection failed" },
+        { status: 500 }
+      );
+    }
+
     if (existing) {
       return NextResponse.json(
         { error: "Account already exists with this phone number" },
@@ -30,9 +48,18 @@ export async function POST(request: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
-      data: { phone, password: hashedPassword, name: name || null, role: "customer" },
-    });
+    let user;
+    try {
+      user = await prisma.user.create({
+        data: { phone, password: hashedPassword, name: name || null, role: "customer" },
+      });
+    } catch (dbError) {
+      console.error("REGISTER DB ERROR (create):", dbError);
+      return NextResponse.json(
+        { error: "Failed to create account" },
+        { status: 500 }
+      );
+    }
 
     const session = {
       userId: user.id,

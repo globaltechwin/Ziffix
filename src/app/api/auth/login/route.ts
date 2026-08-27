@@ -13,7 +13,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await prisma.user.findUnique({ where: { phone } });
+    if (!process.env.DATABASE_URL) {
+      console.error("LOGIN ERROR: DATABASE_URL is not set");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
+    let user;
+    try {
+      user = await prisma.user.findUnique({ where: { phone } });
+    } catch (dbError) {
+      console.error("LOGIN DB ERROR:", dbError);
+      return NextResponse.json(
+        { error: "Database connection failed" },
+        { status: 500 }
+      );
+    }
+
     if (!user) {
       return NextResponse.json(
         { error: "No account found with this phone number" },

@@ -20,7 +20,7 @@ function SignInForm() {
   const [loading, setLoading] = useState(false);
 
   const handleSignIn = async () => {
-    if (phone.length < 10) {
+    if (phone.length !== 10) {
       toast.error("Please enter a valid 10-digit phone number");
       return;
     }

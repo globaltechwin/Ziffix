@@ -17,7 +17,7 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async () => {
-    if (phone.length < 10) {
+    if (phone.length !== 10) {
       toast.error("Please enter a valid 10-digit phone number");
       return;
     }
@@ -29,12 +29,7 @@ export default function SignUpPage() {
     try {
       await signUp(phone, password);
       toast.success("Account created successfully!");
-      const res = await fetch("/api/auth/me");
-      const data = await res.json();
-      const role = data?.user?.role;
-      if (role === "admin") window.location.href = "/admin/dashboard";
-      else if (role === "technician") window.location.href = "/technician/dashboard";
-      else window.location.href = "/customer/home";
+      window.location.href = "/customer/home";
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Registration failed";
