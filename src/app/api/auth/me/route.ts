@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
     const sessionCookie = request.cookies.get("session")?.value;
 
     if (!sessionCookie) {
-      return NextResponse.json({ user: null }, { status: 401 });
+      return NextResponse.json({ user: null });
     }
 
     const session = JSON.parse(atob(sessionCookie));
@@ -17,11 +17,11 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json({ user: null }, { status: 401 });
+      return NextResponse.json({ user: null });
     }
 
     return NextResponse.json({ user });
   } catch {
-    return NextResponse.json({ user: null }, { status: 401 });
+    return NextResponse.json({ user: null });
   }
 }
