@@ -16,7 +16,7 @@ export function ProfilePage() {
     : "";
 
   return (
-    <div className="flex justify-center">
+    <div className="flex justify-center mt-10">
       <div className="w-full max-w-lg space-y-6">
         {/* Profile Card */}
         <motion.div

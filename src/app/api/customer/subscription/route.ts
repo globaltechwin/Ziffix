@@ -79,15 +79,26 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (existing) {
+      // Only allow downgrades via PATCH (upgrades go through Razorpay)
+      const planOrder: Record<string, number> = { free: 0, starter: 1, pro: 2 };
+      if (planOrder[plan] > planOrder[existing.plan]) {
+        return NextResponse.json({ error: "Upgrades require payment" }, { status: 400 });
+      }
+
       const updated = await prisma.subscription.update({
         where: { userId },
-        data: { plan, status: "active", amount: plan === "starter" ? 499 : 999 },
+        data: { plan, status: "active", amount: plan === "starter" ? 499 : plan === "pro" ? 999 : 0 },
       });
       return NextResponse.json({ plan: updated.plan });
     }
 
+    // Only allow creating a free subscription directly
+    if (plan !== "free") {
+      return NextResponse.json({ error: "Upgrades require payment" }, { status: 400 });
+    }
+
     const created = await prisma.subscription.create({
-      data: { userId, plan, status: "active", amount: plan === "starter" ? 499 : 999 },
+      data: { userId, plan, status: "active", amount: 0 },
     });
     return NextResponse.json({ plan: created.plan });
   } catch (error) {

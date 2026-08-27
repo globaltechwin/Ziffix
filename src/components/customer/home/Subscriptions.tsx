@@ -93,7 +93,7 @@ export function Subscriptions() {
 
               <h3 className="text-base font-bold text-foreground">{plan.name}</h3>
               <p className="mt-1 text-xs text-muted-foreground">{plan.description}</p>
-,
+
               <div className="mt-3 flex items-baseline gap-1">
                 <span className="text-2xl font-bold text-foreground">
                   {plan.price === 0 ? "Free" : `₹${plan.price}`}

@@ -9,6 +9,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex h-screen overflow-hidden bg-background" suppressHydrationWarning>
+      <div className="hidden lg:flex">
+        <Sidebar portal="admin" mode="fixed" />
+      </div>
+
       <Sidebar
         portal="admin"
         mode="overlay"
@@ -18,7 +22,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {overlayOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 transition-opacity duration-300"
+          className="fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 lg:hidden"
           onClick={() => setOverlayOpen(false)}
         />
       )}

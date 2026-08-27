@@ -16,6 +16,10 @@ export default function TechnicianLayout({ children }: { children: React.ReactNo
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
+      <div className="hidden lg:flex">
+        <Sidebar portal="technician" mode="fixed" />
+      </div>
+
       <Sidebar
         portal="technician"
         mode="overlay"
@@ -25,7 +29,7 @@ export default function TechnicianLayout({ children }: { children: React.ReactNo
 
       {overlayOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 transition-opacity duration-300"
+          className="fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 lg:hidden"
           onClick={() => setOverlayOpen(false)}
         />
       )}

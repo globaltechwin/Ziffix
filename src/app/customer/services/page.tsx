@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import {
@@ -11,9 +12,22 @@ import {
   Bug,
   Thermometer,
   Grid3X3,
+  Loader2,
 } from "lucide-react";
-import { serviceDetails } from "@/data/serviceDetails";
-import { useService } from "@/context/service-context";
+
+interface Service {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  basePrice: number;
+  duration: number;
+  image?: string;
+  slug?: string;
+  isActive: boolean;
+  rating: number;
+  totalBookings: number;
+}
 
 const categoryIcons: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
   Cleaning: Home,
@@ -49,7 +63,16 @@ const item = {
 };
 
 export default function CustomerServicesPage() {
-  const { isServiceActive } = useService();
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/services")
+      .then((res) => res.json())
+      .then((data) => setServices(data.services || []))
+      .catch(() => setServices([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
@@ -62,73 +85,81 @@ export default function CustomerServicesPage() {
         </p>
       </div>
 
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-2 gap-4 sm:grid-cols-3"
-      >
-        {serviceDetails.map((service) => {
-          const Icon = categoryIcons[service.category] || Grid3X3;
-          const color = categoryColors[service.category] || "#6366f1";
-          const cheapestType = service.types.reduce((min, t) =>
-            t.price < min.price ? t : min
-          );
-          const active = isServiceActive(service.slug);
+      {loading ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : services.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border p-8 text-center">
+          <p className="text-muted-foreground">No services available yet.</p>
+        </div>
+      ) : (
+        <motion.div
+          variants={container}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-2 gap-4 sm:grid-cols-3"
+        >
+          {services.map((service) => {
+            const Icon = categoryIcons[service.category] || Grid3X3;
+            const color = categoryColors[service.category] || "#6366f1";
+            const slug = service.slug || service.id;
 
-          return (
-            <motion.div key={service.slug} variants={item} whileHover={active ? { y: -4 } : undefined}>
-              <Link
-                href={active ? `/customer/services/${service.slug}` : "#"}
-                onClick={(e) => { if (!active) e.preventDefault(); }}
-                className={`group block overflow-hidden rounded-xl border border-border bg-card transition-shadow ${active ? "hover:shadow-md" : "opacity-60"}`}
-              >
-                <div className="relative h-36 overflow-hidden">
-                  <img
-                    src={service.bannerImage}
-                    alt={service.name}
-                    className={`size-full object-cover object-center transition-transform duration-300 ${active ? "group-hover:scale-105" : "grayscale"}`}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                  <div className="absolute bottom-3 left-3 flex items-center gap-2">
-                    <div
-                      className="flex size-8 items-center justify-center rounded-lg"
-                      style={{ backgroundColor: `${color}20` }}
-                    >
-                      <Icon className="size-4" style={{ color }} />
+            return (
+              <motion.div key={service.id} variants={item} whileHover={{ y: -4 }}>
+                <Link
+                  href={`/customer/services/${slug}`}
+                  className="group block overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-md"
+                >
+                  <div className="relative h-36 overflow-hidden">
+                    {service.image ? (
+                      <img
+                        src={service.image}
+                        alt={service.name}
+                        className="size-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex size-full items-center justify-center bg-muted">
+                        <Icon className="size-10 text-muted-foreground" style={{ color }} />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                    <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                      <div
+                        className="flex size-8 items-center justify-center rounded-lg"
+                        style={{ backgroundColor: `${color}20` }}
+                      >
+                        <Icon className="size-4" style={{ color }} />
+                      </div>
+                      <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
+                        {service.category}
+                      </span>
                     </div>
-                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
-                      {service.category}
-                    </span>
                   </div>
-                  {!active && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
-                      <p className="text-sm font-semibold text-white">Not Available</p>
-                      <p className="mt-0.5 text-xs text-white/70">Check back later</p>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-foreground">
+                      {service.name}
+                    </h3>
+                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                      {service.description}
+                    </p>
+                    <div className="mt-3 flex items-center justify-between">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <span>★ {service.rating}</span>
+                        <span>·</span>
+                        <span>{service.totalBookings} bookings</span>
+                      </div>
+                      <p className="text-sm font-semibold text-primary">
+                        From ₹{service.basePrice}
+                      </p>
                     </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-foreground">
-                    {service.name}
-                  </h3>
-                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                    {service.description}
-                  </p>
-                  <div className="mt-3 flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">
-                      {service.types.length} options
-                    </p>
-                    <p className="text-sm font-semibold text-primary">
-                      From ₹{cheapestType.price}
-                    </p>
                   </div>
-                </div>
-              </Link>
-            </motion.div>
-          );
-        })}
-      </motion.div>
+                </Link>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+      )}
     </div>
   );
 }

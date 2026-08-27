@@ -31,12 +31,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   adminNavItems,
   customerNavItems,
   technicianNavItems,
@@ -111,11 +105,9 @@ function SidebarContent({
       >
         <div className="flex items-center gap-2">
           <Home className="size-5 shrink-0 text-primary" />
-          {isOverlay && (
-            <span className="text-lg font-bold tracking-tight text-foreground">
-              Servly
-            </span>
-          )}
+          <span className="text-lg font-bold tracking-tight text-foreground">
+            Servly
+          </span>
         </div>
         {isOverlay && onClose && (
           <Button
@@ -146,8 +138,7 @@ function SidebarContent({
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150",
                   isActive
                     ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground",
-                  !isOverlay && "justify-center px-0"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
                 style={
                   isActive
@@ -163,20 +154,9 @@ function SidebarContent({
                     )}
                   />
                 )}
-                {isOverlay && <span>{item.title}</span>}
+                <span>{item.title}</span>
               </Link>
             );
-
-            if (!isOverlay) {
-              return (
-                <Tooltip key={item.href}>
-                  <TooltipTrigger render={<div />}>
-                    {linkContent}
-                  </TooltipTrigger>
-                  <TooltipContent side="right">{item.title}</TooltipContent>
-                </Tooltip>
-              );
-            }
 
             return <div key={item.href}>{linkContent}</div>;
           })}
@@ -186,26 +166,19 @@ function SidebarContent({
       <Separator />
 
       {/* User Info */}
-      <div
-        className={cn(
-          "flex items-center gap-3 px-3 py-3",
-          !isOverlay && "justify-center px-0"
-        )}
-      >
+      <div className="flex items-center gap-3 px-3 py-3">
         <Avatar size="sm">
           <AvatarFallback>{userInitials}</AvatarFallback>
         </Avatar>
-        {isOverlay && (
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <span className="truncate text-sm font-medium text-foreground">
-              {userName}
-            </span>
-            <span className="truncate text-xs text-muted-foreground">
-              {portalLabels[portal]}
-            </span>
-          </div>
-        )}
-        {isOverlay && (
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <span className="truncate text-sm font-medium text-foreground">
+            {userName}
+          </span>
+          <span className="truncate text-xs text-muted-foreground">
+            {portalLabels[portal]}
+          </span>
+        </div>
+        {isOverlay && onClose && (
           <Button
             variant="ghost"
             size="icon-sm"
@@ -223,17 +196,15 @@ function SidebarContent({
 export function Sidebar({ portal, mode, isOpen, onClose }: SidebarProps) {
   if (mode === "fixed") {
     return (
-      <TooltipProvider>
-        <aside
-          className="hidden h-screen w-16 flex-shrink-0 flex-col border-r md:flex"
-          style={{
-            backgroundColor: "var(--sidebar)",
-            borderColor: "var(--sidebar-border)",
-          }}
-        >
-          <SidebarContent portal={portal} isOverlay={false} />
-        </aside>
-      </TooltipProvider>
+      <aside
+        className="hidden h-screen w-56 flex-shrink-0 flex-col border-r lg:flex"
+        style={{
+          backgroundColor: "var(--sidebar)",
+          borderColor: "var(--sidebar-border)",
+        }}
+      >
+        <SidebarContent portal={portal} isOverlay={false} />
+      </aside>
     );
   }
 

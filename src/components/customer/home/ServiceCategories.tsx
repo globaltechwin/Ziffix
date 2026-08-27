@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import {
@@ -11,8 +12,14 @@ import {
   Zap,
   Wrench,
   Grid3X3,
+  Loader2,
   type LucideIcon,
 } from "lucide-react";
+
+interface Service {
+  id: string;
+  category: string;
+}
 
 interface Category {
   name: string;
@@ -22,47 +29,67 @@ interface Category {
   href: string;
 }
 
-const categories: Category[] = [
-  { name: "Laundry", icon: Shirt, color: "#8b5cf6", count: 4, href: "/customer/services/laundry" },
-  { name: "Car Wash", icon: Car, color: "#3b82f6", count: 5, href: "/customer/services/car-wash" },
-  { name: "Home Cleaning", icon: Home, color: "#22c55e", count: 8, href: "/customer/services/home-cleaning" },
-  { name: "AC Service", icon: Wind, color: "#06b6d4", count: 6, href: "/customer/services/ac-service" },
-  { name: "Pest Control", icon: Bug, color: "#ef4444", count: 3, href: "/customer/services/pest-control" },
-  { name: "Electrician", icon: Zap, color: "#f59e0b", count: 7, href: "/customer/services/electrical-work" },
-  { name: "Plumbing", icon: Wrench, color: "#3b82f6", count: 12, href: "/customer/services/plumbing-repair" },
-  { name: "Other Services", icon: Grid3X3, color: "#6366f1", count: 15, href: "/customer/services" },
-];
-
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05 },
-  },
-};
-
-const item = {
-  hidden: { opacity: 0, y: 10 },
-  show: { opacity: 1, y: 0 },
+const categoryMeta: Record<string, { icon: LucideIcon; color: string }> = {
+  Laundry: { icon: Shirt, color: "#8b5cf6" },
+  "Car Wash": { icon: Car, color: "#3b82f6" },
+  Cleaning: { icon: Home, color: "#22c55e" },
+  HVAC: { icon: Wind, color: "#06b6d4" },
+  "Pest Control": { icon: Bug, color: "#ef4444" },
+  Electrical: { icon: Zap, color: "#f59e0b" },
+  Plumbing: { icon: Wrench, color: "#3b82f6" },
 };
 
 export function ServiceCategories() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/services")
+      .then((res) => res.json())
+      .then((data) => {
+        const services: Service[] = data.services || [];
+        const counts: Record<string, number> = {};
+        services.forEach((s) => {
+          counts[s.category] = (counts[s.category] || 0) + 1;
+        });
+
+        const cats: Category[] = Object.entries(counts).map(([name, count]) => {
+          const meta = categoryMeta[name] || { icon: Grid3X3, color: "#6366f1" };
+          return {
+            name,
+            icon: meta.icon,
+            color: meta.color,
+            count,
+            href: "/customer/services",
+          };
+        });
+
+        setCategories(cats.slice(0, 8));
+      })
+      .catch(() => setCategories([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (categories.length === 0) return null;
+
   return (
     <div>
       <h2 className="mb-4 text-lg font-semibold text-foreground">
         Browse by Category
       </h2>
-      <motion.div
-        variants={container}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true }}
-        className="grid grid-cols-4 gap-1"
-      >
+      <div className="grid grid-cols-4 gap-1">
         {categories.map((cat) => {
           const Icon = cat.icon;
           return (
-            <motion.div key={cat.name} variants={item} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <motion.div key={cat.name} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
                 href={cat.href}
                 className="flex flex-col items-center gap-2 rounded-xl p-3 transition-colors hover:bg-muted"
@@ -76,11 +103,14 @@ export function ServiceCategories() {
                 <span className="text-xs font-medium text-foreground">
                   {cat.name}
                 </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {cat.count} services
+                </span>
               </Link>
             </motion.div>
           );
         })}
-      </motion.div>
+      </div>
     </div>
   );
 }

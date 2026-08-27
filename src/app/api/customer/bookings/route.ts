@@ -1,39 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { razorpay } from "@/lib/razorpay";
 
-function getUserIdFromSession(session: string): string | null {
+function getUser(request: NextRequest) {
+  const sessionCookie = request.cookies.get("session")?.value;
+  if (!sessionCookie) return null;
   try {
-    const decoded = JSON.parse(atob(session));
-    return decoded.userId || null;
+    const session = JSON.parse(atob(sessionCookie));
+    return session.userId as string;
   } catch {
     return null;
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const sessionCookie = request.cookies.get("session")?.value;
-    if (!sessionCookie) {
+    const userId = getUser(request);
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = getUserIdFromSession(sessionCookie);
+    const bookings = await prisma.booking.findMany({
+      where: { customerId: userId },
+      include: {
+        service: { select: { name: true, slug: true, category: true, image: true } },
+        technician: { select: { name: true, phone: true } },
+        payment: { select: { amount: true, status: true, method: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return NextResponse.json({ bookings });
+  } catch (error) {
+    console.error("Failed to fetch bookings:", error);
+    return NextResponse.json({ error: "Failed to fetch bookings" }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const userId = getUser(request);
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { items, address, scheduledDate, scheduledTime, notes } = await request.json();
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+    if (!items || items.length === 0) {
+      return NextResponse.json({ error: "No items provided" }, { status: 400 });
     }
-
-    if (!address || typeof address !== "string" || address.trim().length === 0) {
-      return NextResponse.json({ error: "Address is required" }, { status: 400 });
-    }
-
-    if (!scheduledDate || !scheduledTime) {
-      return NextResponse.json({ error: "Date and time are required" }, { status: 400 });
+    if (!address || !scheduledDate || !scheduledTime) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     const totalAmount = items.reduce(
@@ -48,25 +65,17 @@ export async function POST(request: NextRequest) {
     const order = await razorpay.orders.create({
       amount: totalAmount * 100,
       currency: "INR",
-      receipt: `bk_${Date.now()}`,
-      notes: {
-        userId,
-        itemCount: String(items.length),
-        address: address.slice(0, 250),
-      },
+      receipt: `booking_${Date.now()}`,
     });
 
     return NextResponse.json({
       orderId: order.id,
-      amount: order.amount,
-      currency: order.currency,
+      amount: totalAmount * 100,
+      currency: "INR",
       keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
     });
   } catch (error) {
-    console.error("Create booking order error:", error);
-    return NextResponse.json(
-      { error: "Failed to create order" },
-      { status: 500 }
-    );
+    console.error("Failed to create booking order:", error);
+    return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
   }
 }
