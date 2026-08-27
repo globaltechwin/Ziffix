@@ -11,6 +11,12 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
   return (
     <CartProvider>
       <div className="flex h-screen overflow-hidden bg-background">
+        {/* Fixed sidebar — visible on lg+ only */}
+        <div className="hidden lg:flex">
+          <Sidebar portal="customer" mode="fixed" />
+        </div>
+
+        {/* Overlay sidebar — mobile only */}
         <Sidebar
           portal="customer"
           mode="overlay"
@@ -20,14 +26,14 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
 
         {overlayOpen && (
           <div
-            className="fixed inset-0 z-40 bg-black/50 transition-opacity duration-300"
+            className="fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 lg:hidden"
             onClick={() => setOverlayOpen(false)}
           />
         )}
 
         <div className="flex flex-1 flex-col overflow-hidden">
           <Navbar portal="customer" onMenuToggle={() => setOverlayOpen(!overlayOpen)} />
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto p-6">
             {children}
           </main>
         </div>
